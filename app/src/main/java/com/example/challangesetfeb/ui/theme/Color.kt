@@ -18,3 +18,13 @@ val TextColorDark = Color("#E7EAF3".toColorInt())
 val BackgroundColorDark = Color("#0F0F10".toColorInt())
 val TextBackgroundColorDark = Color(0xFF2C2C2C)
 val ContainerBackgroundDark = Color(0x148138FF)
+
+
+val Surface = Color("#E7E9EF".toColorInt())
+val SurfaceLow = Color("#C1C5D2".toColorInt())
+val SurfaceHigh = Color("#FFFFFF".toColorInt())
+val SurfaceOpacity50 = Color("#80FFFFFF".toColorInt())
+val Red = Color("#FF4E51".toColorInt())
+val RedAlt = Color("#FE6264".toColorInt()) // EF1242
+val Yellow = Color("#FCB966".toColorInt())
+val Green = Color("#19D181".toColorInt())
