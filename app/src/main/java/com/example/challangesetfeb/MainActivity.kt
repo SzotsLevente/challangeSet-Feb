@@ -107,7 +107,7 @@ fun BatteryIndicator(modifier: Modifier = Modifier) {
             .background(color = Surface)
             .padding(16.dp)
     ) {
-        val isHeartActive = batteryLevel > 0.0f && batteryLevel <= 0.2f || batteryLevel == 1f
+        val isHeartActive = batteryLevel > 0.0f && batteryLevel <= 0.2f
         val isCloverActive = batteryLevel >= 0.8f
 
         var heartScale by remember { mutableFloatStateOf(0.8f) }
