@@ -60,8 +60,11 @@ import com.example.challangesetfeb.ui.theme.Green
 import com.example.challangesetfeb.ui.theme.Red
 import com.example.challangesetfeb.ui.theme.RedAlt
 import com.example.challangesetfeb.ui.theme.Surface
+import com.example.challangesetfeb.ui.theme.SurfaceHigh
+import com.example.challangesetfeb.ui.theme.SurfaceLow
 import com.example.challangesetfeb.ui.theme.Yellow
 import kotlinx.coroutines.delay
+import org.intellij.lang.annotations.JdkConstants
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,18 +104,18 @@ fun BatteryIndicator(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
         modifier = modifier
             .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.background)
+            .background(color = Surface)
             .padding(16.dp)
     ) {
-        val isHeartActive = batteryLevel <= 0.2f || batteryLevel == 1f
+        val isHeartActive = batteryLevel > 0.0f && batteryLevel <= 0.2f || batteryLevel == 1f
         val isCloverActive = batteryLevel >= 0.8f
 
         var heartScale by remember { mutableFloatStateOf(0.8f) }
-        var heartTint by remember { mutableStateOf( Surface) }
+        var heartTint by remember { mutableStateOf(SurfaceLow) }
 
         LaunchedEffect(isHeartActive) {
             if (isHeartActive) {
-                while(true) {
+                while (isHeartActive) {
                     for (i in 0..50) {
                         heartScale = 0.8f + (0.5f * i / 50f)
                         heartTint = Red
@@ -127,7 +130,7 @@ fun BatteryIndicator(modifier: Modifier = Modifier) {
                 }
             } else {
                 heartScale = 0.8f
-                heartTint = Surface
+                heartTint = SurfaceLow
             }
         }
 
@@ -154,8 +157,8 @@ fun BatteryIndicator(modifier: Modifier = Modifier) {
                 batteryLevel = batteryLevel,
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
-                    .width(148.dp)
-                    .height(58.dp)
+                    .width(223.dp)
+                    .height(68.dp)
             )
 
             Icon(
@@ -164,7 +167,7 @@ fun BatteryIndicator(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .scale(cloverScale),
-                tint = if (isCloverActive) Green else Surface
+                tint = if (isCloverActive) Green else SurfaceLow
             )
         }
     }
@@ -201,18 +204,17 @@ fun BatteryView(
             val canvasHeight = size.height
 
             drawRoundRect(
-                color = Surface,
+                color = Color.White,
                 topLeft = Offset(0f, 0f),
                 size = Size(canvasWidth * 0.9f, canvasHeight),
-                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx()),
-                style = Stroke(width = 1.dp.toPx())
+                cornerRadius = CornerRadius(12.dp.toPx(), 12.dp.toPx()),
             )
 
             drawRoundRect(
-                color = Surface,
-                topLeft = Offset(canvasWidth * 0.9f, canvasHeight * 0.3f),
+                color = Color.White,
+                topLeft = Offset(canvasWidth * 0.89f, canvasHeight * 0.3f),
                 size = Size(canvasWidth * 0.035f, canvasHeight * 0.4f),
-                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                cornerRadius = CornerRadius(12.dp.toPx(), 12.dp.toPx())
             )
 
             if (batteryLevel > 0) {
@@ -223,13 +225,13 @@ fun BatteryView(
                         (canvasWidth * 0.9f - 8.dp.toPx()) * batteryLevel,
                         canvasHeight - 8.dp.toPx()
                     ),
-                    cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
+                    cornerRadius = CornerRadius(12.dp.toPx(), 12.dp.toPx())
                 )
             }
 
             val batteryInnerWidth = canvasWidth * 0.9f - 8.dp.toPx()
             val dividerSpacing = batteryInnerWidth / 5
-            val dividerColor = Surface.copy(alpha = 0.6f)
+            val dividerColor = SurfaceHigh
             val dividerWidth = 1.dp.toPx()
             val dividerHeight = canvasHeight - 12.dp.toPx()
             val dividerStartY = 6.dp.toPx()
