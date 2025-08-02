@@ -2,12 +2,14 @@
 
 package com.example.challangesetfeb
 
+import android.Manifest
 import android.content.Context
 import android.os.BatteryManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -32,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -48,13 +51,19 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.decode.GifDecoder
+import coil.request.ImageRequest
+import com.example.challangesetfeb.data.model.Confetti
+import com.example.challangesetfeb.data.model.ConfettiShape
 import com.example.challangesetfeb.ui.theme.ChallengeSetFebTheme
 import com.example.challangesetfeb.ui.theme.Green
 import com.example.challangesetfeb.ui.theme.Red
@@ -64,18 +73,170 @@ import com.example.challangesetfeb.ui.theme.SurfaceHigh
 import com.example.challangesetfeb.ui.theme.SurfaceLow
 import com.example.challangesetfeb.ui.theme.Yellow
 import kotlinx.coroutines.delay
-import org.intellij.lang.annotations.JdkConstants
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+        } else {
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        requestPermissionLauncher.launch(Manifest.permission.RECEIVE_SMS)
         setContent {
             ChallengeSetFebTheme(dynamicColor = false) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     //ThousandSeparatorPicker(modifier = Modifier.padding(innerPadding))
-                    BatteryIndicator(modifier = Modifier.padding(innerPadding))
+                    //BatteryIndicator(modifier = Modifier.padding(innerPadding))
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        SMSConfetti()
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun SMSConfetti(modifier: Modifier = Modifier) {
+    var showConfetti by remember { mutableStateOf(false) }
+    var confetti by remember { mutableStateOf(emptyList<Confetti>()) }
+    var animationProgress by remember { mutableFloatStateOf(0f) }
+
+    DisposableEffect(Unit) {
+        SmsReceiver.setOnValidSmsReceived {
+            showConfetti = true
+        }
+
+        onDispose {
+            SmsReceiver.clearCallback()
+        }
+    }
+
+    LaunchedEffect(showConfetti) {
+        if (showConfetti) {
+            confetti = generateConfetti()
+            animationProgress = 0f
+
+            val animationDuration = 10000L
+            val startTime = System.currentTimeMillis()
+
+            while (animationProgress < 1f) {
+                val currentTime = System.currentTimeMillis()
+                animationProgress =
+                    ((currentTime - startTime).toFloat() / animationDuration).coerceAtMost(1f)
+                delay(16) // 60 FPS
+            }
+
+            showConfetti = false
+            confetti = emptyList()
+        }
+    }
+
+    if (showConfetti && confetti.isNotEmpty()) {
+
+        if (showConfetti && confetti.isNotEmpty()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data("file:///android_asset/schools_NRYaO8KduDTG8m2REJmk_files_confetti.gif")
+                    .decoderFactory(GifDecoder.Factory())
+                    .build(),
+                contentDescription = "Confetti Background GIF",
+                modifier = Modifier.fillMaxSize(),
+            )
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                confetti.forEach { confetti ->
+                    drawConfetti(confetti, animationProgress)
+                }
+            }
+        }
+    } else {
+        Column(modifier = modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text( text =
+                "Waiting for SMS...",
+                modifier = Modifier.padding(top = 32.dp)
+            )
+        }
+    }
+}
+
+private fun generateConfetti(): List<Confetti> {
+    val colors = listOf(
+        Color(0xFFFF6B6B),
+        Color(0xFF4ECDC4),
+        Color(0xFF45B7D1),
+        Color(0xFF96CEB4),
+        Color(0xFFE91E63),
+        Color(0xFFFFC107),
+        Color(0xFF9C27B0),
+        Color(0xFFFF9800)
+    )
+
+    val shapes = ConfettiShape.values()
+    val particleCount = 50
+
+    return (0 until particleCount).map { index ->
+        Confetti(
+            id = index,
+            startX = Random.nextFloat(),
+            startY = -0.1f,
+            color = colors.random(),
+            shape = shapes.random(),
+            size = Random.nextFloat() * 8f + 4f,
+            rotation = Random.nextFloat() * 360f,
+            fallSpeed = Random.nextFloat() * 0.5f + 0.5f,
+            horizontalDrift = (Random.nextFloat() - 0.5f) * 0.3f
+        )
+    }
+}
+
+private fun DrawScope.drawConfetti(confetti: Confetti, progress: Float) {
+    val screenWidth = size.width
+    val screenHeight = size.height
+
+    val currentX =
+        (confetti.startX * screenWidth) + (confetti.horizontalDrift * screenWidth * progress)
+    val currentY =
+        confetti.startY * screenHeight + (screenHeight * 1.2f * progress * confetti.fallSpeed)
+
+    if (currentY > screenHeight + 50) return
+
+    val currentRotation = confetti.rotation + (progress * 720f)
+    val particleSize = confetti.size * (1f - progress * 0.2f)
+
+    rotate(currentRotation, Offset(currentX, currentY)) {
+        when (confetti.shape) {
+            ConfettiShape.CIRCLE -> {
+                drawCircle(
+                    color = confetti.color,
+                    radius = particleSize,
+                    center = Offset(currentX, currentY)
+                )
+            }
+
+            ConfettiShape.SQUARE -> {
+                drawRect(
+                    color = confetti.color,
+                    topLeft = Offset(currentX - particleSize, currentY - particleSize),
+                    size = Size(particleSize * 2, particleSize * 2)
+                )
+            }
+
+            ConfettiShape.TRIANGLE -> {
+                val path = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(currentX, currentY - particleSize)
+                    lineTo(currentX - particleSize, currentY + particleSize)
+                    lineTo(currentX + particleSize, currentY + particleSize)
+                    close()
+                }
+                drawPath(path, confetti.color)
             }
         }
     }
@@ -91,11 +252,11 @@ fun BatteryIndicator(modifier: Modifier = Modifier) {
             batteryLevel = getBatteryLevel(context)
             delay(5000)
             // Simulate battery level from 1% to 100%
-           /* for (i in 1..100) {
-                batteryLevel = i / 100f
-                delay(110)
-            }
-            delay(4000)*/
+            /* for (i in 1..100) {
+                 batteryLevel = i / 100f
+                 delay(110)
+             }
+             delay(4000)*/
         }
     }
 
@@ -170,6 +331,8 @@ fun BatteryIndicator(modifier: Modifier = Modifier) {
                 tint = if (isCloverActive) Green else SurfaceLow
             )
         }
+
+
     }
 }
 
