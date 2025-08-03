@@ -6,6 +6,10 @@ import android.content.Intent
 import android.provider.Telephony
 import android.telephony.SmsMessage
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class SmsReceiver : BroadcastReceiver() {
 
@@ -40,7 +44,10 @@ class SmsReceiver : BroadcastReceiver() {
                 Log.d("SmsReceiver", "Sender: $sender, Message: $messageBody")
 
                 if (sender == TARGET_SENDER && messageBody?.trim() == TARGET_MESSAGE) {
-                    onValidSmsReceived?.invoke()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(2000)
+                        onValidSmsReceived?.invoke()
+                    }
                     break
                 }
             }
